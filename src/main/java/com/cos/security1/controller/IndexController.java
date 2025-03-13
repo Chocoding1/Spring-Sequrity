@@ -5,6 +5,8 @@ import com.cos.security1.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,16 +27,19 @@ public class IndexController {
         return "index";
     }
 
+    @ResponseBody
     @GetMapping("/user")
     public String user() {
         return "user";
     }
 
+    @ResponseBody
     @GetMapping("/admin")
     public String admin() {
         return "admin";
     }
 
+    @ResponseBody
     @GetMapping("/manager")
     public String manager() {
         return "manager";
@@ -70,5 +75,31 @@ public class IndexController {
         userRepository.save(user);
 
         return "redirect:/loginForm";
+    }
+
+    /**
+     * @Secured
+     * 특정 url에 간단하게 걸 때 사용
+     * 하나의 권한만 설정할 때 사용
+     * SecurityConfig에서 @EnableMethodSecurity을 설정했기 때문에 사용할 수 있는 것
+     */
+    @Secured("ROLE_ADMIN")
+    @ResponseBody
+    @GetMapping("/info")
+    public String info() {
+        return "개인정보";
+    }
+
+    /**
+     * @PreAuthorize
+     * 특정 url에 간단하게 걸 때 사용
+     * 여러 권한을 설정할 때 사용
+     * "ROLE_MANGER"만 적으면 안 됨 (hasRole() 메서드 사용)
+     */
+    @PreAuthorize("hasRole('ROLE_MANAGER') or hasRole('ROLE_ADMIN')")
+    @ResponseBody
+    @GetMapping("/data")
+    public String data() {
+        return "데이터 정보";
     }
 }
