@@ -49,6 +49,9 @@ public class SecurityConfig {
                          */
                         .loginProcessingUrl("/login")
                         .defaultSuccessUrl("/") // 로그인 성공 시, redirect url 설정
+                )
+                .oauth2Login(oauth2 -> oauth2 // oauth2.0 로그인 설정
+                        .loginPage("/loginForm") // 구글 로그인 완료된 이후 후처리 필요
                 );
         return http.build();
     }
