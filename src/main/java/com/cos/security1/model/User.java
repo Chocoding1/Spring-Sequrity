@@ -23,7 +23,7 @@ public class User {
     private String username;
     private String password;
     private String email;
-    private String role; // ROLE_USER, ROLE_MANAGER, ROLE_ADMIM
+    private String role; // ROLE_USER, ROLE_MANAGER, ROLE_ADMIM => 꼭 ROLE_~ 형태로 저장해야 security가 작동한다.
 
     @CreationTimestamp
     private Timestamp createDate;

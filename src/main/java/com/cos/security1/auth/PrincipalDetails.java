@@ -11,9 +11,9 @@ import java.util.Collection;
  * 시큐리티가 /login 주소 요청이 오면 낚아채서 로그인을 진행시킨다.
  * 로그인이 완료가 되면 시큐리티 session을 만들어준다.
  * 세션 공간은 HttpSession과 동일한데, 시큐리티가 그 안에 시큐리티 세션 공간을 따로 분리한다.
- * 'Security ContextHolder'라는 키값에 세션 정보를 저장한다.
+ * 'SecurityContextHolder'라는 key값에 세션 정보를 저장한다.
  * 이 때 시큐리티가 가지고 있는 세션에 들어갈 수 있는 오브젝트는 정해져 있다. => Authentication 타입의 객체만 들어갈 수 있다.
- * 그리고 Authentication 안에 User 정보가 있어야 된다.
+ * 그리고 Authentication 안에는 User 정보가 들어가 있어야 된다.
  * 이 User 오브젝트의 타입도 정해져 있다. => UserDetails 타입의 객체만 들어갈 수 있다.
  * 즉 시큐리티 세션에는 Authentication 타입만 저장될 수 있고, Authentication 안에는 UserDetails 타입만 저장될 수 있다.
  * Security Session <= Type(Authentication) <= Type(UserDetails)
@@ -23,7 +23,7 @@ import java.util.Collection;
 
 public class PrincipalDetails implements UserDetails { // UserDetails를 구현함으로써, PrincipalDetails 타입은 Authentication 안에 저장될 수 있다.
 
-    private User user; // 콤포지션 (이게 뭐지?)
+    private User user; // 콤포지션 : 기존 클래스를 확장하는 대신, 새로운 클래스를 만들고 private 필드로 기존 클래스의 인스턴스를 참조하는 방법을 통해 기능을 확장시키는 것
 
     public PrincipalDetails(User user) {
         this.user = user;

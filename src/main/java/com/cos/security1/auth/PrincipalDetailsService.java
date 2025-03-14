@@ -29,7 +29,7 @@ public class PrincipalDetailsService implements UserDetailsService {
 
     /**
      * 파라미터로 받는 username은 loginForm에서 날아오는 username이기 때문에
-     * username을 받는 영역의 name을 꼭 username으로 맞춰줘야 매칭이 된다.
+     * HTML 폼에서 username을 받는 태그의 name을 꼭 username으로 맞춰줘야 매칭이 된다.
      */
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
