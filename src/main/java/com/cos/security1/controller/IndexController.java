@@ -1,13 +1,15 @@
 package com.cos.security1.controller;
 
+import com.cos.security1.config.auth.PrincipalDetails;
 import com.cos.security1.model.User;
 import com.cos.security1.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,16 +22,68 @@ public class IndexController {
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
-    private static final Logger log = LoggerFactory.getLogger(IndexController.class);
+    /**
+     * 일반 로그인 시 Authentication 객체에는 UserDetails 타입의 객체가 들어간다.
+     * 컨트롤러에서 Authentication 객체에 접근하는 두 가지 방법 (DI 활용)
+     * 1. Authentication 객체 사용
+     * 2. @AuthenticationPrincipal 어노테이션 사용 (UserDetails 객체를 사용할 수 있는데, PrincipalDetails가 UserDetails를 상속받았기 때문에 사용 가능)
+     */
+    @ResponseBody
+    @GetMapping("/test/login")
+    public String testLogin(Authentication authentication,
+                            @AuthenticationPrincipal PrincipalDetails userDetails) {
+        System.out.println("/test/login ================");
+        // Authentication 객체 사용해서 User 객체 추출
+        PrincipalDetails principalDetails = (PrincipalDetails) authentication.getPrincipal();
+        System.out.println("authentication : " + principalDetails.getUser());
+
+        // @AuthenticationPrincipal 어노테이션 사용해서 User 객체 추출
+        System.out.println("userDetails : " + userDetails.getUser());
+
+        return "세션 정보 확인하기";
+    }
+
+    /**
+     * OAuth2.0 로그인 시 Authentication 객체에는 OAuth2User 타입의 객체가 들어간다.
+     * 컨트롤러에서 Authentication 객체에 접근하는 두 가지 방법 (DI 활용)
+     * 1. Authentication 객체 사용
+     * 2. @AuthenticationPrincipal 어노테이션 사용 (OAuth2User 객체를 사용 가능)
+     */
+    @ResponseBody
+    @GetMapping("/test/oauth/login")
+    public String testOAuthLogin(Authentication authentication,
+                                 @AuthenticationPrincipal OAuth2User oAuth) {
+        System.out.println("/test/oauth/login ================");
+        // Authentication 객체 사용해서 User 객체 추출
+        OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
+        System.out.println("authentication : " + oAuth2User.getAttributes());
+
+        System.out.println("oauth2User : " + oAuth.getAttributes());
+
+        return "OAuth 세션 정보 확인하기";
+    }
+
+    /**
+     * 위의 방법은 사용자가 일반 로그인할 때와 OAuth 로그인할 때를 둘 다 생각해서 만들어야 하기 때문에 번거롭다.
+     * 이 번거로움을 해결하기 위해 PrincipalDetails가 UserDetails 뿐만 아니라 OAuth2User도 상속받게 했다. (Authentication 객체 안에는 두 클래스 다 들어갈 수 있다.)
+     * 그에 맞춰 PrincipalOauth2UserService도 만들고, 여기에서도 마지막에 User 객체를 PrincipalDetails 객체로 감싸서 반환한다.
+     * 이 번거로움을 해결한 결과는 /user API에서 확인
+     */
 
     @GetMapping({"", "/"})
     public String index() {
         return "index";
     }
 
+    /**
+     * 일반 로그인을 해도 PrincipalDetails로 받을 수 있고,
+     * OAuth 로그인을 해도 PrincipalDetails로 받을 수 있다.
+     * @AuthenticationPrincipal 어노테이션은 loadUserByUsername 또는 loadUser 함수가 종료되면 생성된다.
+     */
     @ResponseBody
     @GetMapping("/user")
-    public String user() {
+    public String user(@AuthenticationPrincipal PrincipalDetails principalDetails) {
+        System.out.println("principalDetails : " + principalDetails.getUser());
         return "user";
     }
 
