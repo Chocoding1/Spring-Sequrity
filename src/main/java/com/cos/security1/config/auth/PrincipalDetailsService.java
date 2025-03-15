@@ -1,4 +1,4 @@
-package com.cos.security1.auth;
+package com.cos.security1.config.auth;
 
 import com.cos.security1.model.User;
 import com.cos.security1.repository.UserRepository;
@@ -30,6 +30,14 @@ public class PrincipalDetailsService implements UserDetailsService {
     /**
      * 파라미터로 받는 username은 loginForm에서 날아오는 username이기 때문에
      * HTML 폼에서 username을 받는 태그의 name을 꼭 username으로 맞춰줘야 매칭이 된다.
+     */
+    /**
+     * 해당 함수 종료 시, @AuthenticationPrincipal 어노테이션 만들어진다.
+     */
+    /**
+     * 단순히 UserDetails를 반환할 거면 loadUserByUsername 함수를 오버라이딩할 필요가 없다.
+     * 오버라이딩하지 않아도 알아서 UserDetails를 반환한다.
+     * 그러나 오버라이딩한 이유는 UserDetails를 반환하는 것이 아니라 PrincipalDetails를 반환하려고 하기 때문이다.
      */
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
