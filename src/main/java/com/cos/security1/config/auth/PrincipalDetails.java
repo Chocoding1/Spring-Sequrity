@@ -1,11 +1,14 @@
 package com.cos.security1.auth;
 
 import com.cos.security1.model.User;
+import lombok.Data;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Map;
 
 /**
  * 시큐리티가 /login 주소 요청이 오면 낚아채서 로그인을 진행시킨다.
@@ -15,19 +18,31 @@ import java.util.Collection;
  * 이 때 시큐리티가 가지고 있는 세션에 들어갈 수 있는 오브젝트는 정해져 있다. => Authentication 타입의 객체만 들어갈 수 있다.
  * 그리고 Authentication 안에는 User 정보가 들어가 있어야 된다.
  * 이 User 오브젝트의 타입도 정해져 있다. => UserDetails 타입의 객체만 들어갈 수 있다.
- * 즉 시큐리티 세션에는 Authentication 타입만 저장될 수 있고, Authentication 안에는 UserDetails 타입만 저장될 수 있다.
- * Security Session <= Type(Authentication) <= Type(UserDetails)
+ * 즉 시큐리티 세션에는 Authentication 타입만 저장될 수 있고, Authentication 안에는 UserDetails 타입만 저장될 수 있다. +) Authentication 안에는 UserDetails와 OAuth2User 타입이 들어갈 수 있다.
+ * Security Session <= Type(Authentication) <= Type(UserDetails or OAuth2User)
  *
  * UserDetails 만들었으면, Authentication도 만들어야 한다.
  */
-
-public class PrincipalDetails implements UserDetails { // UserDetails를 구현함으로써, PrincipalDetails 타입은 Authentication 안에 저장될 수 있다.
+@Data
+public class PrincipalDetails implements UserDetails, OAuth2User { // UserDetails를 구현함으로써, PrincipalDetails 타입은 Authentication 안에 저장될 수 있다.
 
     private User user; // 콤포지션 : 기존 클래스를 확장하는 대신, 새로운 클래스를 만들고 private 필드로 기존 클래스의 인스턴스를 참조하는 방법을 통해 기능을 확장시키는 것
+    private Map<String, Object> attributes; // OAuth2User 속성 필드
 
+    // 일반 로그인 시 생성자
     public PrincipalDetails(User user) {
         this.user = user;
     }
+
+    // 생성자 오버로딩
+    // OAuth2.0 로그인 시 생성자
+    public PrincipalDetails(User user, Map<String, Object> attributes) { // attributes 정보를 토대로 User 객체를 만들 예정(PrincipalOauth2UserService에서 진행 -> SecurityConfig에서 후처리한다고 한 서비스)
+        this.user = user;
+        this.attributes = attributes;
+    }
+
+    /**
+     * UserDetails overriding*/
 
     // 해당 User의 권한을 리턴하는 곳 (권한은 유저의 role을 뜻한다.)
     @Override
@@ -42,7 +57,6 @@ public class PrincipalDetails implements UserDetails { // UserDetails를 구현�
         });
         return collect;
     }
-
     @Override
     public String getPassword() {
         return user.getPassword();
@@ -54,24 +68,25 @@ public class PrincipalDetails implements UserDetails { // UserDetails를 구현�
     }
 
     // 계정이 만료됐는지 체크
+
     @Override
     public boolean isAccountNonExpired() {
         return true;
     }
-
     // 계정이 잠겼는지 체크
+
     @Override
     public boolean isAccountNonLocked() {
         return true;
     }
-
     // 계정의 비밀번호가 유효기간이 지났는지 체크
+
     @Override
     public boolean isCredentialsNonExpired() {
         return true;
     }
-
     // 계정이 활성화되어 있는지 체크
+
     @Override
     public boolean isEnabled() {
         /**
@@ -84,4 +99,17 @@ public class PrincipalDetails implements UserDetails { // UserDetails를 구현�
         return true;
     }
 
+    /**
+     * OAuth2User overriding
+     */
+
+    @Override
+    public Map<String, Object> getAttributes() {
+        return attributes;
+    }
+
+    @Override
+    public String getName() {
+        return null;
+    }
 }

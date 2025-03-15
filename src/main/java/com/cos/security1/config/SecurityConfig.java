@@ -1,12 +1,13 @@
 package com.cos.security1.config;
 
+import com.cos.security1.config.oauth.PrincipalOauth2UserService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
@@ -18,18 +19,10 @@ import org.springframework.security.web.SecurityFilterChain;
  * securedEnabled = true : @Secured 어노테이션 활성화
  * prePostEnabled = true : @PreAuthorize, @PostAuthorize 어노테이션 활성화
  */
+@RequiredArgsConstructor
 public class SecurityConfig {
 
-    /**
-     * BCryptPasswordEncoder
-     * 스프링 시큐리티(Spring Seurity) 프레임워크에서 제공하는 클래스 중 하나로 비밀번호를 암호화하는 데 사용할 수 있는 메서드를 가진 클래스
-     * PasswordEncoder 인터페이스를 구현한 클래스
-     * BCrypt 해싱 함수(BCrypt hashing function)를 사용해서 비밀번호를 인코딩해주는 메서드와 사용자의 의해 제출된 비밀번호와 저장소에 저장되어 있는 비밀번호의 일치 여부를 확인해주는 메서드를 제공
-     */
-    @Bean
-    public BCryptPasswordEncoder encodePwd() {
-        return new BCryptPasswordEncoder();
-    }
+    private final PrincipalOauth2UserService principalOauth2UserService;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -51,7 +44,9 @@ public class SecurityConfig {
                         .defaultSuccessUrl("/") // 로그인 성공 시, redirect url 설정
                 )
                 .oauth2Login(oauth2 -> oauth2 // oauth2.0 로그인 설정
-                        .loginPage("/loginForm") // 구글 로그인 완료된 이후 후처리 필요
+                        .loginPage("/loginForm") // 구글 로그인 완료된 이후 후처리 필요 => 구글 로그인이 완료되면, (엑세스 토큰 + 사용자 프로필 정보)를 한 번에 받는다.
+                        .userInfoEndpoint(userInfoEndpoint -> userInfoEndpoint
+                                .userService(principalOauth2UserService)) // 후처리하는 service 등록
                 );
         return http.build();
     }
