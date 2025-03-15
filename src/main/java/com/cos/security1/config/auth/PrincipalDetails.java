@@ -1,4 +1,4 @@
-package com.cos.security1.auth;
+package com.cos.security1.config.auth;
 
 import com.cos.security1.model.User;
 import lombok.Data;
@@ -42,7 +42,8 @@ public class PrincipalDetails implements UserDetails, OAuth2User { // UserDetail
     }
 
     /**
-     * UserDetails overriding*/
+     * UserDetails overriding
+     */
 
     // 해당 User의 권한을 리턴하는 곳 (권한은 유저의 role을 뜻한다.)
     @Override
