@@ -1,6 +1,9 @@
 package com.cos.security1.config.oauth;
 
 import com.cos.security1.config.auth.PrincipalDetails;
+import com.cos.security1.config.oauth.provider.FacebookUserInfo;
+import com.cos.security1.config.oauth.provider.GoogleUserInfo;
+import com.cos.security1.config.oauth.provider.OAuth2UserInfo;
 import com.cos.security1.model.User;
 import com.cos.security1.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -43,17 +46,32 @@ public class PrincipalOauth2UserService extends DefaultOAuth2UserService {
         OAuth2User oAuth2User = super.loadUser(userRequest);
         System.out.println("getAttributes  : " + oAuth2User.getAttributes()); // 이 Attribute 정보들을 가지고 User 엔티티에 매핑할 예정
 
+        OAuth2UserInfo oAuth2UserInfo = null;
+        if (userRequest.getClientRegistration().getRegistrationId().equals("google")) {
+            log.info("구글 로그인 요청");
+            oAuth2UserInfo = new GoogleUserInfo(oAuth2User.getAttributes());
+        } else if (userRequest.getClientRegistration().getRegistrationId().equals("facebook")) {
+            oAuth2UserInfo = new FacebookUserInfo(oAuth2User.getAttributes());
+            log.info("페이스북 로그인 요청");
+        } else {
+            log.info("구글 또는 페이스북 로그인만 지원합니다.");
+        }
+
         // 회원가입 진행
-        String provider = userRequest.getClientRegistration().getRegistrationId(); // google
-        String providerId = oAuth2User.getAttribute("sub");
+        String provider = oAuth2UserInfo.getProvider(); // google or facebook
+        /**
+         * providerId값 추출 시 key값
+         * google : sub
+         * facebook : id
+         */
+        String providerId = oAuth2UserInfo.getProviderId();
         String username = provider + "_" + providerId; // google_216543218921321
         String password = bCryptPasswordEncoder.encode("개발왕");
-        String email = oAuth2User.getAttribute("email");
+        String email = oAuth2UserInfo.getEmail();
         String role = "ROLE_USER";
 
         // 중복 회원가입 체크
         User userEntity = userRepository.findByUsername(username);
-
         if (userEntity == null) {
             userEntity = User.builder()
                     .username(username)
@@ -66,7 +84,7 @@ public class PrincipalOauth2UserService extends DefaultOAuth2UserService {
 
             userRepository.save(userEntity);
         } else {
-            log.info("이미 존재하는 회원입니다.");
+            log.info("이전에 로그인한 적이 있습니다. 마지막 로그인 : " + provider);
         }
 
         return new PrincipalDetails(userEntity, oAuth2User.getAttributes()); // PrincipalDetails가 OAuth2User을 상속받았으니 반환 가능
